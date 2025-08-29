@@ -196,33 +196,23 @@ CREATE POLICY "Users can view own images" ON images FOR SELECT USING (auth.uid()
 CREATE POLICY "Users can insert own images" ON images FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own images" ON images FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own images" ON images FOR DELETE USING (auth.uid() = user_id);
-
 Start Development Server
-
 npm run dev
 
 Runs at: http://localhost:3000
 
 🧪 Testing with Postman
-
 Signup → POST /auth/signup
-
 Login → POST /auth/login → Save JWT token
-
 Upload Image → POST /api/images (Bearer token + form-data)
-
 List Images → GET /api/images (Bearer token)
-
 Delete Image → DELETE /api/images/:id (Bearer token)
 
 🐳 Docker Deployment
 
 Build & Run
-
 docker-compose up -d --build
-
 docker-compose.yml
-
 version: '3.8'
 services:
 app:
@@ -232,15 +222,10 @@ env_file: - .env
 restart: unless-stopped
 
 ☁️ AWS EC2 Deployment
-
 Launch EC2 (Amazon Linux 2023, t2.micro, open ports 22, 3000, 80)
-
 SSH into EC2 and install Docker + Docker Compose
-
 Transfer project → scp -i "your-key.pem" ./backend ec2-user@your-ec2-ip:/home/ec2-user/
-
 Run docker-compose up -d --build
-
 (Optional) Configure Nginx as reverse proxy
 
 📋 Project Structure
@@ -262,41 +247,26 @@ backend/
 🛡️ Security Features
 
 JWT token authentication for all protected routes
-
 Row-level security in Supabase database
-
 File type validation (images only)
-
 File size limits (10MB max)
-
 Secure environment variable management
-
 CORS protection enabled
 
 🚀 Performance Features
-
 Docker containerization for easy deployment
-
 Efficient file streaming to Backblaze B2
-
 Database indexing for fast queries
-
 Memory-efficient file handling with Multer
-
 Horizontal scaling capability
 
 📝 License
-
 This project is licensed under the ISC License.
 
-🤝 Contributing
+## 🤝 Contributing
 
 Fork the repository
-
 Create a feature branch → git checkout -b feature/amazing-feature
-
 Commit changes → git commit -m 'Add amazing feature'
-
 Push branch → git push origin feature/amazing-feature
-
 Open a Pull Request
