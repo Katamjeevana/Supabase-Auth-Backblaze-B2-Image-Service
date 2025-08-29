@@ -33,6 +33,10 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+app.get('/success', (req, res) => {
+  res.send("✅ Your email has been confirmed. You can now log in.");
+});
+
 // Initialize Backblaze B2 and start server
 const startServer = async () => {
   try {
