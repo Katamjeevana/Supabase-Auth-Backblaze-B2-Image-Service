@@ -4,7 +4,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -17,3 +17,29 @@ services:
       - B2_BUCKET_ID=${B2_BUCKET_ID}
       - B2_ENDPOINT=${B2_ENDPOINT}
     restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./ssl:/etc/ssl/certs
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
