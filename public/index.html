@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Image Vault - Complete Authentication</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Your CSS remains the same with some additions */
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: var(--gradient);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .auth-container, .upload-container {
+            padding: 30px;
+        }
+        
+        .upload-container {
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-logout {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid var(--primary);
+            font-size: 14px;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .verification-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .email-troubleshooting {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        /* Upload area styles */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: #f8f9fa;
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .images-container {
+            margin-top: 30px;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .image-card {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-card:hover {
+            transform: scale(1.03);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        
+        .image-info {
+            padding: 15px;
+        }
+        
+        .image-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .api-controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .api-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        /* Form styling */
+        form {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .troubleshooting-tips {
+            margin-top: 15px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .troubleshooting-tips ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .troubleshooting-tips li {
+            margin-bottom: 5px;
+        }
+        
+        /* Image viewer styles - FIXED */
+        .image-viewer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .image-viewer-content {
+            max-width: 90%;
+            max-height: 80%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .image-viewer-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .image-viewer-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            z-index: 2001;
+        }
+        
+        .image-viewer-info {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1><i class="fas fa-cloud-upload-alt"></i> Secure Image Vault</h1>
+                <div class="user-info">
+                    <span id="user-email">user@example.com</span>
+                    <button id="logout-btn" class="btn btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Authentication Section -->
+        <div id="auth-section" class="auth-container">
+            <h2 style="text-align: center; margin-bottom: 30px; color: var(--dark);">
+                <i class="fas fa-lock"></i> Account Access
+            </h2>
+            
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email" value="" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-key"></i> Password</label>
+                   <input type="password" id="password" placeholder="Enter your password" value="" required autocomplete="current-password">
+                </div>
+                
+                <button type="button" id="signup-btn" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+                
+                <button type="button" id="login-btn" class="btn btn-secondary">
+                    <i class="fas fa-sign-in-alt"></i> Login to Account
+                </button>
+            </form>
+            
+            <div class="verification-section">
+                <button id="resend-verification-btn" class="btn" style="background: #f8f9fa; color: var(--dark);">
+                    <i class="fas fa-envelope"></i> Resend Verification Email
+                </button>
+                <button id="confirm-email-btn" class="btn" style="background: #f8f9fa; color: var(--dark); margin-top: 10px;">
+                    <i class="fas fa-check-circle"></i> Confirm Email
+                </button>
+                <button id="troubleshoot-email-btn" class="btn btn-small" style="background: #fff3cd; color: #856404; margin-top: 10px;">
+                    <i class="fas fa-question-circle"></i> Not receiving emails?
+                </button>
+            </div>
+            
+            <div id="auth-response" class="response">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Welcome! Please sign up or login to continue.
+                </div>
+            </div>
+            
+            <div id="email-troubleshooting" class="email-troubleshooting" style="display: none;">
+                <h3><i class="fas fa-question-circle"></i> Email Troubleshooting</h3>
+                <p>If you're not receiving confirmation emails:</p>
+                <div class="troubleshooting-tips">
+                    <ul>
+                        <li>Check your spam or junk folder</li>
+                        <li>Verify you entered the correct email address</li>
+                        <li>Try using a different email provider (Gmail, Outlook, etc.)</li>
+                        <li>Wait a few minutes - emails can sometimes be delayed</li>
+                    </ul>
+                </div>
+                <button id="manual-confirm-btn" class="btn btn-small" style="background: var(--primary); color: white;">
+                    <i class="fas fa-user-cog"></i> Manual Confirmation
+                </button>
+            </div>
+        </div>
+        
+        <!-- Upload Section (initially hidden) -->
+        <div id="upload-section" class="upload-container">
+            <h2>Upload Your Images</h2>
+            
+            <div id="upload-area" class="upload-area">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Drag & Drop your images here</h3>
+                <p>or click to browse files</p>
+                <input type="file" id="file-input" style="display: none;" accept="image/*" multiple>
+            </div>
+            
+            <button id="upload-btn" class="btn btn-primary" disabled>
+                <i class="fas fa-upload"></i> Upload Images
+            </button>
+            
+            <div class="api-controls">
+                <h3>Image Operations</h3>
+                <div class="api-buttons">
+                    <button id="get-my-images-btn" class="btn btn-secondary">
+                        <i class="fas fa-user"></i> My Uploaded Images
+                    </button>
+                    <button id="get-all-images-btn" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> GET All Images
+                    </button>
+                    <button id="get-image-by-id-btn" class="btn btn-secondary">
+                        <i class="fas fa-search"></i> GET Image by ID
+                    </button>
+                    <button id="delete-image-btn" class="btn btn-logout">
+                        <i class="fas fa-trash"></i> DELETE Image
+                    </button>
+                </div>
+                <div id="id-input-section" style="display: none; margin-top: 10px;">
+                    <input type="text" id="image-id-input" placeholder="Enter Image ID">
+                    <button id="submit-id-btn" class="btn btn-small btn-primary">Submit</button>
+                </div>
+            </div>
+            
+            <div id="upload-response"></div>
+            
+            <div class="images-container">
+                <h3>Your Uploaded Images</h3>
+                <div class="image-grid" id="image-grid">
+                    <p>No images uploaded yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <h2>Confirm Your Email</h2>
+            <div class="form-group">
+                <label for="confirmationCode">Confirmation Code</label>
+                <input type="text" id="confirmationCode" placeholder="Enter confirmation code">
+            </div>
+            <button id="confirm-email-submit" class="btn btn-primary">
+                Confirm Email
+            </button>
+            <div id="confirmation-response"></div>
+        </div>
+    </div>
+
+   <!-- Manual Confirmation Modal -->
+<div id="manualConfirmModal" class="modal">
+  <div class="modal-content">
+    <span id="close-manual-modal" class="close">&times;</span>
+    <h2>Manual Email Confirmation</h2>
+    <p>If you're not receiving emails, we can manually confirm your account.</p>
+    <div class="form-group">
+      <label for="manual-email">Email Address</label>
+      <input type="email" id="manual-email" placeholder="Enter your email">
+    </div>
+    <button id="manual-confirm-submit" class="btn btn-primary">
+      Generate Confirmation Code
+    </button>
+    <div id="manual-confirm-response"></div>
+    <div id="code-verification-section" style="display: none; margin-top: 20px;">
+      <div class="form-group">
+        <label for="manual-code">Confirmation Code</label>
+        <input type="text" id="manual-code" placeholder="Enter confirmation code">
+      </div>
+      <button id="verify-code-btn" class="btn btn-primary">
+        Verify Code
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Viewer - FIXED -->
+<div id="image-viewer" class="image-viewer">
+    <span class="image-viewer-close">&times;</span>
+    <div class="image-viewer-content">
+        <img id="viewer-image" src="" alt="">
+    </div>
+    <div class="image-viewer-info" id="viewer-info"></div>
+</div>
+
+    <script>
+        // DOM Elements
+        const authSection = document.getElementById('auth-section');
+        const uploadSection = document.getElementById('upload-section');
+        const signupBtn = document.getElementById('signup-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const resendVerificationBtn = document.getElementById('resend-verification-btn');
+        const confirmEmailBtn = document.getElementById('confirm-email-btn');
+        const troubleshootEmailBtn = document.getElementById('troubleshoot-email-btn');
+        const manualConfirmBtn = document.getElementById('manual-confirm-btn');
+        const closeModalBtn = document.getElementById('close-modal');
+        const closeManualModalBtn = document.getElementById('close-manual-modal');
+        const confirmEmailSubmitBtn = document.getElementById('confirm-email-submit');
+        const manualConfirmSubmitBtn = document.getElementById('manual-confirm-submit');
+        const verifyCodeBtn = document.getElementById('verify-code-btn');
+        const confirmationModal = document.getElementById('confirmationModal');
+        const manualConfirmModal = document.getElementById('manualConfirmModal');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmationCodeInput = document.getElementById('confirmationCode');
+        const manualEmailInput = document.getElementById('manual-email');
+        const manualCodeInput = document.getElementById('manual-code');
+        const authForm = document.getElementById('auth-form');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userEmailSpan = document.getElementById('user-email');
+        const emailTroubleshooting = document.getElementById('email-troubleshooting');
+        const imageViewer = document.getElementById('image-viewer');
+        const viewerImage = document.getElementById('viewer-image');
+        const viewerInfo = document.getElementById('viewer-info');
+        const viewerClose = document.querySelector('.image-viewer-close');
+        
+        // Upload elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const imageGrid = document.getElementById('image-grid');
+        
+        // API operation elements
+        const getMyImagesBtn = document.getElementById('get-my-images-btn');
+        const getAllImagesBtn = document.getElementById('get-all-images-btn');
+        const getImageByIdBtn = document.getElementById('get-image-by-id-btn');
+        const deleteImageBtn = document.getElementById('delete-image-btn');
+        const idInputSection = document.getElementById('id-input-section');
+        const imageIdInput = document.getElementById('image-id-input');
+        const submitIdBtn = document.getElementById('submit-id-btn');
+        
+        const API_BASE = window.location.origin;
+        
+        // State variables
+        let jwtToken = localStorage.getItem('jwtToken');
+        let currentEmail = '';
+        let selectedFiles = [];
+        let currentOperation = ''; 
+        let currentViewMode = 'myImages'; // 'myImages' or 'allImages'
+        let allImages = []; // Store all images for filtering
+
+        // Initialize
+        if (jwtToken) {
+            verifyToken();
+        }
+
+        // Event listeners
+        signupBtn.addEventListener('click', signup);
+        loginBtn.addEventListener('click', login);
+        resendVerificationBtn.addEventListener('click', resendVerification);
+        confirmEmailBtn.addEventListener('click', showConfirmationModal);
+        troubleshootEmailBtn.addEventListener('click', toggleTroubleshooting);
+        manualConfirmBtn.addEventListener('click', showManualConfirmationModal);
+        closeModalBtn.addEventListener('click', closeConfirmationModal);
+        closeManualModalBtn.addEventListener('click', closeManualConfirmationModal);
+        confirmEmailSubmitBtn.addEventListener('click', confirmEmail);
+        manualConfirmSubmitBtn.addEventListener('click', manualConfirmEmail);
+        verifyCodeBtn.addEventListener('click', verifyManualConfirmationCode);
+        logoutBtn.addEventListener('click', logout);
+        viewerClose.addEventListener('click', closeImageViewer);
+        
+        // Upload event listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadBtn.addEventListener('click', uploadImages);
+        
+        // API operation event listeners
+        getMyImagesBtn.addEventListener('click', () => {
+            currentViewMode = 'myImages';
+            filterMyImages();
+        });
+        getAllImagesBtn.addEventListener('click', () => {
+            currentViewMode = 'allImages';
+            loadAllImages();
+        });
+        getImageByIdBtn.addEventListener('click', () => showIdInput('getById'));
+        deleteImageBtn.addEventListener('click', () => showIdInput('delete'));
+        submitIdBtn.addEventListener('click', handleIdOperation);
+        
+        // Form submission prevention
+        authForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+        
+        // Enter key listeners
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+        
+        confirmationCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                confirmEmail();
+            }
+        });
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === confirmationModal) {
+                closeConfirmationModal();
+            }
+            if (event.target === manualConfirmModal) {
+                closeManualConfirmationModal();
+            }
+            if (event.target === imageViewer) {
+                closeImageViewer();
+            }
+        });
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+
+        // Authentication functions
+        async function verifyToken() {
+            try {
+                const response = await fetch('/auth/verify', {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    showUploadSection(userData.user.email);
+                } else {
+                    // Try to repair user account if verification fails
+                    const repairResult = await repairUserAccount();
+                    if (repairResult.success) {
+                        showUploadSection(repairResult.email);
+                    } else {
+                        localStorage.removeItem('jwtToken');
+                        jwtToken = null;
+                        showAuthSection();
+                    }
+                }
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                localStorage.removeItem('jwtToken');
+                jwtToken = null;
+            }
+        }
+
+        // Repair user account if there's a mismatch between auth and app databases
+        async function repairUserAccount() {
+            try {
+                const repairResponse = await fetch('/auth/repair-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+                
+                if (repairResponse.ok) {
+                    const result = await repairResponse.json();
+                    return { success: true, email: result.user.email };
+                } else {
+                    const error = await repairResponse.json();
+                    return { success: false, error: error.error || 'Failed to repair user account' };
+                }
+            } catch (error) {
+                console.error('Repair user error:', error);
+                return { success: false, error: error.message };
+            }
+        }
+                
+        function showUploadSection(email) {
+            authSection.style.display = 'none';
+            uploadSection.style.display = 'block';
+            userEmailSpan.textContent = email;
+            currentEmail = email;
+            loadAllImages();
+        }
+
+        function showAuthSection() {
+            uploadSection.style.display = 'none';
+            authSection.style.display = 'block';
+        }
+
+        function toggleTroubleshooting() {
+            emailTroubleshooting.style.display = emailTroubleshooting.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function showManualConfirmationModal() {
+            manualEmailInput.value = emailInput.value || currentEmail;
+            manualConfirmModal.style.display = 'block';
+        }
+
+        function closeManualConfirmationModal() {
+            manualConfirmModal.style.display = 'none';
+            document.getElementById('manual-confirm-response').innerHTML = '';
+            document.getElementById('code-verification-section').style.display = 'none';
+        }
+
+        // Fixed image viewer functions
+        function openImageViewer(imageUrl, imageInfo = '') {
+            viewerImage.src = imageUrl;
+            viewerInfo.textContent = imageInfo;
+            imageViewer.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closeImageViewer() {
+            imageViewer.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Re-enable scrolling
+        }
+
+        function filterMyImages() {
+            if (allImages.length === 0) {
+                imageGrid.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No images found. Please load all images first.
+                    </div>
+                `;
+                return;
+            }
+            
+            const myImages = allImages.filter(image => image.user_email === currentEmail);
+            
+            if (myImages.length > 0) {
+                imageGrid.innerHTML = myImages.map(image => `
+                    <div class="image-card" onclick="openImageViewer('${image.url}', '${image.original_name} - ${Math.round(image.size / 1024)} KB')">
+                        <img src="${image.url}" alt="${image.original_name}" onerror="this.src='https://placehold.co/200x150?text=Image+Not+Found'">
+                        <div class="image-info">
+                            <p><strong>${image.original_name}</strong></p>
+                            <p>ID: ${image.id}</p>
+                            <p>${Math.round(image.size / 1024)} KB</p>
+                            <p>${new Date(image.created_at).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                imageGrid.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        You haven't uploaded any images yet.
+                    </div>
+                `;
+            }
+        }
+
+        // API call function
+        async function apiCall(endpoint, options = {}) {
+            console.log('Making API call to:', `${API_BASE}${endpoint}`);
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const result = await response.json();
+                console.log('API Response:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                return { error: 'Network error: ' + error.message };
+            }
+        }
+        
+        // Authentication functions
+        async function signup() {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            currentEmail = email;
+            
+            if (!email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+            
+            showLoading('Creating your account...');
+            
+            const result = await apiCall('/auth/signup', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+            
+            if (result.error) {
+                showError(result.error);
+            } else {
+                if (result.otpExpiry) {
+                    const minutes = result.otpExpiry / 60;
+                    showSuccess(`Account created! Check your email. Verification link expires in ${minutes} minutes.`);
+                } else {
+                    showSuccess('Account created successfully! Please check your email for confirmation.');
+                }
+                // Show troubleshooting tips since emails might not arrive
+                emailTroubleshooting.style.display = 'block';
+            }
+        }
+        
+        async function login() {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            if (!email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            showLoading('Logging in...');
+            
+            const result = await apiCall('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+            
+            if (result.accessToken) {
+                jwtToken = result.accessToken;
+                localStorage.setItem('jwtToken', jwtToken);
+                showSuccess('Login successful!');
+                showUploadSection(email);
+            } else {
+                // Show specific error messages
+                let errorMessage = 'Login failed. ';
+                
+                if (result.error) {
+                    if (result.error.includes('confirm')) {
+                        errorMessage += 'Please confirm your email first.';
+                        emailTroubleshooting.style.display = 'block';
+                    } else if (result.error.includes('credentials') || result.error.includes('Invalid')) {
+                        errorMessage += 'Invalid email or password.';
+                    } else {
+                        errorMessage += result.error;
+                    }
+                } else {
+                    errorMessage += 'Please try again.';
+                }
+                
+                showError(errorMessage);
+            }
+        }
+        
+        async function resendVerification() {
+            const email = emailInput.value || currentEmail;
+            
+            if (!email) {
+                showError('Please enter your email address');
+                return;
+            }
+            
+            showLoading('Resending verification email...');
+            
+            const result = await apiCall('/auth/resend-verification', {
+                method: 'POST',
+                body: JSON.stringify({ email })
+            });
+            
+            if (result.error) {
+                showError(result.error);
+            } else {
+                showSuccess('Verification email sent! Please check your inbox.');
+            }
+        }
+        
+        function showConfirmationModal() {
+            currentEmail = emailInput.value || currentEmail;
+            if (!currentEmail) {
+                showError('Please enter your email address first');
+                return;
+            }
+            confirmationModal.style.display = 'block';
+        }
+        
+        function closeConfirmationModal() {
+            confirmationModal.style.display = 'none';
+            confirmationCodeInput.value = '';
+            document.getElementById('confirmation-response').innerHTML = '';
+        }
+        
+        async function confirmEmail() {
+            const code = confirmationCodeInput.value;
+            
+            if (!currentEmail || !code) {
+                document.getElementById('confirmation-response').innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Please enter confirmation code
+                    </div>
+                `;
+                return;
+            }
+            
+            document.getElementById('confirmation-response').innerHTML = `
+                <div class="alert alert-info">
+                    <div class="loading"></div>
+                    Confirming your email...
+                </div>
+            `;
+            
+            const result = await apiCall('/auth/confirm-email', {
+                method: 'POST',
+                body: JSON.stringify({ email: currentEmail, code })
+            });
+            
+            if (result.error) {
+                document.getElementById('confirmation-response').innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        ${result.error}
+                    </div>
+                `;
+            } else {
+                document.getElementById('confirmation-response').innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        ${result.message}
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    closeConfirmationModal();
+                }, 2000);
+            }
+        }
+        
+        async function manualConfirmEmail() {
+            const email = manualEmailInput.value;
+            
+            if (!email) {
+                document.getElementById('manual-confirm-response').innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Please enter your email address
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('manual-confirm-response').innerHTML = `
+                <div class="alert alert-info">
+                    <div class="loading"></div>
+                    Generating confirmation code...
+                </div>
+            `;
+
+            const result = await apiCall('/auth/manual-confirm', {
+                method: 'POST',
+                body: JSON.stringify({ email })
+            });
+
+            if (result.error) {
+                document.getElementById('manual-confirm-response').innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        ${result.error}
+                    </div>
+                `;
+            } else {
+                document.getElementById('manual-confirm-response').innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        ${result.message}
+                        <p>Your confirmation code: <strong>${result.code}</strong></p>
+                        <p>This code will expire in ${result.expiry}.</p>
+                    </div>
+                `;
+                
+                // Show the code verification section
+                document.getElementById('code-verification-section').style.display = 'block';
+            }
+        }
+
+        async function verifyManualConfirmationCode() {
+            const email = manualEmailInput.value;
+            const code = manualCodeInput.value;
+            
+            if (!email || !code) {
+                document.getElementById('manual-confirm-response').innerHTML += `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Please enter both email and confirmation code
+                    </div>
+                `;
+                return;
+            }
+            
+            document.getElementById('manual-confirm-response').innerHTML += `
+                <div class="alert alert-info">
+                    <div class="loading"></div>
+                    Verifying confirmation code...
+                </div>
+            `;
+            
+            const result = await apiCall('/auth/verify-manual-confirmation', {
+                method: 'POST',
+                body: JSON.stringify({ email, code })
+            });
+            
+            if (result.error) {
+                document.getElementById('manual-confirm-response').innerHTML += `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        ${result.error}
+                    </div>
+                `;
+            } else {
+                document.getElementById('manual-confirm-response').innerHTML += `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        ${result.message}
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    closeManualConfirmationModal();
+                }, 2000);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('jwtToken');
+            jwtToken = null;
+            showAuthSection();
+            showSuccess('Logged out successfully');
+            emailInput.value = '';
+            passwordInput.value = '';
+        }
+        
+        function showLoading(message) {
+            document.getElementById('auth-response').innerHTML = `
+                <div class="alert alert-info">
+                    <div class="loading"></div>
+                    ${message}
+                </div>
+            `;
+        }
+        
+        function showSuccess(message) {
+            document.getElementById('auth-response').innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    ${message}
+                </div>
+            `;
+        }
+        
+        function showError(message) {
+            document.getElementById('auth-response').innerHTML = `
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    ${message}
+                </div>
+            `;
+        }
+
+        // Upload functionality
+        function handleFileSelect(e) {
+            selectedFiles = Array.from(e.target.files);
+            uploadBtn.disabled = selectedFiles.length === 0;
+            
+            if (selectedFiles.length > 0) {
+                document.getElementById('upload-response').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        ${selectedFiles.length} file(s) selected for upload.
+                    </div>
+                `;
+            }
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--primary)';
+            uploadArea.style.backgroundColor = '#f0f8ff';
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ccc';
+            uploadArea.style.backgroundColor = 'transparent';
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            selectedFiles = Array.from(e.dataTransfer.files);
+            uploadBtn.disabled = selectedFiles.length === 0;
+            
+            if (selectedFiles.length > 0) {
+                document.getElementById('upload-response').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        ${selectedFiles.length} file(s) selected for upload.
+                    </div>
+                `;
+            }
+        }
+        
+        async function uploadImages() {
+            if (selectedFiles.length === 0) return;
+            
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('image', file);
+            });
+            
+            try {
+                document.getElementById('upload-response').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Uploading ${selectedFiles.length} image(s)...
+                    </div>
+                `;
+                
+                const response = await fetch(`${API_BASE}/api/images`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    },
+                     body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    document.getElementById('upload-response').innerHTML = `
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            ${result.error}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('upload-response').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            Successfully uploaded ${selectedFiles.length} image(s)!
+                        </div>
+                    `;
+                    
+                    // Reset file input
+                    selectedFiles = [];
+                    fileInput.value = '';
+                    uploadBtn.disabled = true;
+                    
+                    // Refresh images
+                    loadAllImages();
+                }
+            } catch (error) {
+                document.getElementById('upload-response').innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Upload failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // API Operation Functions
+        function showIdInput(operation) {
+            currentOperation = operation;
+            idInputSection.style.display = 'block';
+            imageIdInput.focus();
+        }
+        
+        async function handleIdOperation() {
+            const imageId = imageIdInput.value.trim();
+            
+            if (!imageId) {
+                document.getElementById('upload-response').innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Please enter an image ID
+                    </div>
+                `;
+                return;
+            }
+            
+            if (currentOperation === 'getById') {
+                await getImageById(imageId);
+            } else if (currentOperation === 'delete') {
+                await deleteImage(imageId);
+            }
+            
+            // Reset the input section
+            idInputSection.style.display = 'none';
+            imageIdInput.value = '';
+        }
+        
+        async function getImageById(imageId) {
+            try {
+                document.getElementById('upload-response').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Getting image with ID: ${imageId}...
+                    </div>
+                `;
+                
+                const response = await fetch(`${API_BASE}/api/images/${imageId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    document.getElementById('upload-response').innerHTML = `
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            ${result.error}
+                        </div>
+                    `;
+                } else {
+                    // Display the single image
+                    document.getElementById('upload-response').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            Successfully retrieved image!
+                        </div>
+                    `;
+                    
+                    // Show the image in the grid
+                    imageGrid.innerHTML = `
+                        <div class="image-card" onclick="openImageViewer('${result.url}', '${result.original_name} - ${Math.round(result.size / 1024)} KB')">
+                            <img src="${result.url}" alt="${result.original_name}" onerror="this.src='https://placehold.co/200x150?text=Image+Not+Found'">
+                            <div class="image-info">
+                                <p><strong>${result.original_name}</strong></p>
+                                <p>ID: ${result.id}</p>
+                                <p>${Math.round(result.size / 1024)} KB</p>
+                                <p>${new Date(result.created_at).toLocaleDateString()}</p>
+                                ${result.user_email ? `<p>Uploaded by: ${result.user_email}</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('upload-response').innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Failed to get image: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function deleteImage(imageId) {
+            try {
+                document.getElementById('upload-response').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Deleting image with ID: ${imageId}...
+                    </div>
+                `;
+                
+                const response = await fetch(`${API_BASE}/api/images/${imageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    document.getElementById('upload-response').innerHTML = `
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            ${result.error}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('upload-response').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            Successfully deleted image!
+                        </div>
+                    `;
+                    
+                    // Refresh the images list
+                    loadAllImages();
+                }
+            } catch (error) {
+                document.getElementById('upload-response').innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Failed to delete image: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadAllImages() {
+            try {
+                const response = await fetch(`${API_BASE}/api/images`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+                
+                // Check if response is forbidden (user not in custom table)
+                if (response.status === 403) {
+                    console.log('User not found in application database, attempting repair...');
+                    
+                    // Try to repair the user account
+                    const repairResult = await repairUserAccount();
+                    
+                    if (repairResult.success) {
+                        // Retry loading images after repair
+                        console.log('User account repaired, retrying image load...');
+                        await loadAllImages();
+                    } else {
+                        imageGrid.innerHTML = `
+                            <div class="alert alert-error">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Account synchronization error. Please try logging out and back in.
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+                
+                // Handle other errors
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error loading images:', response.status, errorText);
+                    imageGrid.innerHTML = `
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Failed to load images: ${response.status} ${response.statusText}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    console.error('Error loading images:', result.error);
+                    imageGrid.innerHTML = `
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            ${result.error}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Store all images for filtering
+                allImages = result.images || [];
+                
+                if (allImages.length > 0) {
+                    // Show only user's images by default
+                    if (currentViewMode === 'myImages') {
+                        filterMyImages();
+                    } else {
+                        imageGrid.innerHTML = allImages.map(image => `
+                            <div class="image-card" onclick="openImageViewer('${image.url}', '${image.original_name} - ${Math.round(image.size / 1024)} KB - Uploaded by: ${image.user_email}')">
+                                <img src="${image.url}" alt="${image.original_name}" onerror="this.src='https://placehold.co/200x150?text=Image+Not+Found'">
+                                <div class="image-info">
+                                    <p><strong>${image.original_name}</strong></p>
+                                    <p>ID: ${image.id}</p>
+                                    <p>${Math.round(image.size / 1024)} KB</p>
+                                    <p>${new Date(image.created_at).toLocaleDateString()}</p>
+                                    ${image.user_email ? `<p>Uploaded by: ${image.user_email}</p>` : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    imageGrid.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            No images found in the database.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading images:', error);
+                imageGrid.innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Network error loading images. Please check your connection.
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

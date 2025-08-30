@@ -3,10 +3,10 @@ FROM node:18-alpine
 WORKDIR /app
 
 COPY package*.json ./
+RUN npm install
 
-RUN npm install --only=production
-
-COPY . .
+COPY public/ ./public/
+COPY src/ ./src/
 
 EXPOSE 3000
 
